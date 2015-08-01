@@ -1,11 +1,20 @@
+#![feature(custom_derive)]
+
 extern crate iron;
 extern crate router;
+extern crate rustc_serialize;
 
 use std::str::FromStr;
 use std::env;
 use iron::{Iron, Request, Response, IronResult};
 use router::Router;
 use iron::status;
+use rustc_serialize::json;
+
+#[derive(RustcEncodable)]
+struct Human<'a> {
+    name: &'a str
+}
 
 // Serves a string to the user.  Try accessing "/".
 fn hello(_: &mut Request) -> IronResult<Response> {
@@ -17,7 +26,8 @@ fn hello(_: &mut Request) -> IronResult<Response> {
 fn hello_name(req: &mut Request) -> IronResult<Response> {
     let params = req.extensions.get::<Router>().unwrap();
     let name = params.find("name").unwrap();
-    let resp = Response::with((status::Ok, format!("Hello, {}!", name)));
+    let human = Human { name: name };
+    let resp = Response::with((status::Ok, json::encode(&human).unwrap()));
     Ok(resp)
 }
 
